@@ -1,1 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OPENAIFM – Real Voice TTS</title>
 
+<style>
+body{
+  margin:0;
+  font-family:system-ui;
+  background:#0b0f1a;
+  color:white;
+}
+.container{
+  max-width:900px;
+  margin:auto;
+  padding:20px;
+}
+h1{
+  text-align:center;
+  color:#00e5ff;
+}
+.card{
+  background:#131a2a;
+  padding:20px;
+  border-radius:16px;
+}
+textarea,select,button{
+  width:100%;
+  margin-top:12px;
+  padding:14px;
+  border-radius:12px;
+  border:none;
+  font-size:16px;
+}
+button{
+  background:#00e5ff;
+  font-weight:bold;
+  cursor:pointer;
+}
+button.stop{
+  background:#334155;
+  color:white;
+}
+.row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+@media(max-width:600px){
+  .row{grid-template-columns:1fr;}
+}
+audio{width:100%; margin-top:12px;}
+.hidden{display:none;}
+</style>
+</head>
+
+<body>
+<div class="container">
+<h1>OPENAIFM</h1>
+
+<div class="card">
+<textarea id="text" placeholder="Enter text here..."></textarea>
+
+<select id="voice">
+  <option value="en_US-lessac-medium">Male – Storytelling</option>
+  <option value="en_US-amy-medium">Female – Sweet</option>
+  <option value="en_US-kathleen-medium">Female – Calm</option>
+</select>
+
+<div class="row">
+  <button onclick="generate()">🎙 Generate Speech</button>
+  <button class="stop" onclick="stop()">⛔ Stop</button>
+</div>
+
+<audio id="player" controls class="hidden"></audio>
+<a id="download" class="hidden" download="openaifm.wav">
+  <button class="stop">⬇ Download Audio</button>
+</a>
+</div>
+</div>
+
+<script type="module">
+import { PiperTTS } from "https://cdn.jsdelivr.net/npm/@mintplex-labs/piper-tts-web/+esm";
+
+let tts;
+let stopped=false;
+
+async function generate(){
+  stopped=false;
+  const text=document.getElementById("text").value.trim();
+  if(!text) return;
+
+  const voice=document.getElementById("voice").value;
+
+  if(!tts){
+    tts=new PiperTTS();
+    await tts.init();
+  }
+
+  const audioBlob=await tts.predict({
+    text,
+    voiceId:voice
+  });
+
+  if(stopped) return;
+
+  const url=URL.createObjectURL(audioBlob);
+  const player=document.getElementById("player");
+  const download=document.getElementById("download");
+
+  player.src=url;
+  player.classList.remove("hidden");
+  download.href=url;
+  download.classList.remove("hidden");
+
+  player.play();
+}
+
+function stop(){
+  stopped=true;
+  const player=document.getElementById("player");
+  player.pause();
+  player.currentTime=0;
+}
+</script>
+
+</body>
+</html>
